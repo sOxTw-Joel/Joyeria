@@ -3,14 +3,15 @@ import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  projectId: "mystical-works-6zp2g",
-  appId: "1:399220680591:web:1f699470c2f7f3dad1cdfa",
-  apiKey: "AIzaSyBR5DtCHGmxTIfTOQZrK4CwwnIp_xVkvkE",
-  authDomain: "mystical-works-6zp2g.firebaseapp.com",
-  storageBucket: "mystical-works-6zp2g.firebasestorage.app",
-  messagingSenderId: "399220680591",
+  apiKey: "AIzaSyD_KiH36-csZFfJv55VL03lqKul6qtJTJY",
+  authDomain: "joyeria-c5fb4.firebaseapp.com",
+  projectId: "joyeria-c5fb4",
+  storageBucket: "joyeria-c5fb4.firebasestorage.app",
+  messagingSenderId: "963629510788",
+  appId: "1:963629510788:web:a45927cce8ee415f6e52d1",
+  measurementId: "G-6S8NDW7QVM"
 };
 
 export const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, "ai-studio-catlogodejoyera-a4e17969-60ac-4631-951d-29bbc8a56b28");
+export const db = getFirestore(app);
 export const auth = getAuth(app);
