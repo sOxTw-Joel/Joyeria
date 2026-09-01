@@ -1,0 +1,6 @@
+{
+  "name": "Catálogo de Joyería",
+  "description": "Un panel de administración y catálogo moderno para una tienda de joyas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
