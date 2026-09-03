@@ -56,14 +56,11 @@ export default function CatalogLayout() {
 
             {/* Logo */}
             <Link to="/" className="flex items-center justify-center flex-1 md:flex-none">
-              {settings?.logo ? (
-                <img src={settings.logo} alt="Logo" className="h-10 md:h-12 w-auto object-contain" />
-              ) : (
-                <div className="flex flex-col items-center md:items-start text-center md:text-left">
-                  <span className="text-2xl md:text-4xl tracking-tight font-serif font-light text-[#F2F2F2]">{settings?.title || 'AURUM & CO.'}</span>
-                  <span className="text-[#C5A059] text-[8px] md:text-[9px] tracking-[0.3em] uppercase mt-1">Catálogo de Alta Joyería</span>
-                </div>
-              )}
+              <img 
+                src={settings?.logo || "/logo.webp"} 
+                alt={settings?.title || "Logo"} 
+                className="h-10 md:h-12 w-auto object-contain" 
+              />
             </Link>
 
             {/* Desktop Navigation */}
