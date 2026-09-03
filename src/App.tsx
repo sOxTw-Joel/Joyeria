@@ -10,6 +10,7 @@ import AdminLogin from './pages/admin/AdminLogin';
 import { useEffect, useState } from 'react';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { CartProvider } from './contexts/CartContext';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -24,28 +25,30 @@ function App() {
   }, []);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+    return <div className="min-h-screen flex items-center justify-center text-white bg-[#050505]">Cargando...</div>;
   }
 
   return (
-    <Router>
-      <Routes>
-        {/* Public Catalog */}
-        <Route path="/" element={<CatalogLayout />}>
-          <Route index element={<CatalogPage />} />
-        </Route>
+    <CartProvider>
+      <Router>
+        <Routes>
+          {/* Public Catalog */}
+          <Route path="/" element={<CatalogLayout />}>
+            <Route index element={<CatalogPage />} />
+          </Route>
 
-        {/* Admin Routes */}
-        <Route path="/admin/login" element={user ? <Navigate to="/admin" /> : <AdminLogin />} />
-        
-        <Route path="/admin" element={user ? <AdminLayout /> : <Navigate to="/admin/login" />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="products" element={<AdminProducts />} />
-          <Route path="categories" element={<AdminCategories />} />
-          <Route path="settings" element={<AdminSettings />} />
-        </Route>
-      </Routes>
-    </Router>
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={user ? <Navigate to="/admin" /> : <AdminLogin />} />
+          
+          <Route path="/admin" element={user ? <AdminLayout /> : <Navigate to="/admin/login" />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
+        </Routes>
+      </Router>
+    </CartProvider>
   );
 }
 

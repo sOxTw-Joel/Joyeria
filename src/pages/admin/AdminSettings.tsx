@@ -100,6 +100,21 @@ export default function AdminSettings() {
         </div>
 
         <div className="space-y-4">
+          <h2 className="text-[11px] font-bold text-[#C5A059] uppercase tracking-[0.2em] border-b border-[#222] pb-2 mt-8">Configuración de WhatsApp</h2>
+          <p className="text-[11px] uppercase tracking-widest text-neutral-400 mb-4 leading-relaxed">Número de WhatsApp donde se recibirán los pedidos (incluir código de país sin el símbolo +). Ejemplo: 5215555555555</p>
+          
+          <div className="space-y-2 max-w-md">
+            <Label>Número de WhatsApp</Label>
+            <Input 
+              type="text"
+              placeholder="Ej. 5215555555555"
+              value={settings.whatsappNumber || ''} 
+              onChange={e => setSettings({ ...settings, whatsappNumber: e.target.value })} 
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4">
           <h2 className="text-[11px] font-bold text-[#C5A059] uppercase tracking-[0.2em] border-b border-[#222] pb-2 mt-8">Menú de Navegación</h2>
           <p className="text-[11px] uppercase tracking-widest text-neutral-400 mb-4 leading-relaxed">Selecciona qué categorías serán visibles en el menú principal del catálogo.</p>
           

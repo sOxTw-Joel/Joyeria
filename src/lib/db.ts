@@ -20,7 +20,7 @@ export const getSettings = async (): Promise<StoreSettings> => {
   if (docSnap.exists()) {
     return docSnap.data() as StoreSettings;
   }
-  return { title: 'Catálogo de Joyería', logo: null, visibleCategories: [] };
+  return { title: 'Catálogo de Joyería', logo: null, visibleCategories: [], whatsappNumber: '' };
 };
 
 export const updateSettings = async (settings: Partial<StoreSettings>) => {

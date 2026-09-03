@@ -1,11 +1,13 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Tags, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, Tags, Settings, LogOut, Menu, X } from 'lucide-react';
 import { auth } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { cn } from '../../lib/utils';
+import { useState } from 'react';
 
 export default function AdminLayout() {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     signOut(auth);
@@ -20,11 +22,27 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-[#050505] flex font-sans text-white">
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/80 z-40 md:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-[#0F0F0F] border-r border-[#222] flex-shrink-0 flex flex-col p-6">
-        <div className="mb-4">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] mb-2">Admin Panel</div>
-          <h1 className="text-xl font-serif italic text-white">Management Console</h1>
+      <aside className={cn(
+        "fixed md:static inset-y-0 left-0 z-50 w-64 bg-[#0F0F0F] border-r border-[#222] flex-shrink-0 flex flex-col p-6 transition-transform duration-300 ease-in-out md:transform-none",
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] mb-2">Admin Panel</div>
+            <h1 className="text-xl font-serif italic text-white">Management Console</h1>
+          </div>
+          <button className="md:hidden text-neutral-400 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
+            <X className="w-6 h-6" />
+          </button>
         </div>
         <nav className="flex-1 mt-6 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
@@ -34,6 +52,7 @@ export default function AdminLayout() {
               <Link
                 key={item.path}
                 to={item.path}
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={cn(
                   "flex items-center gap-3 p-3 rounded-md text-[11px] uppercase tracking-widest font-medium transition-colors",
                   isActive ? "bg-[#161616] text-[#C5A059] border-l-2 border-[#C5A059]" : "text-neutral-500 hover:bg-[#161616] hover:text-neutral-300 border-l-2 border-transparent"
@@ -58,8 +77,11 @@ export default function AdminLayout() {
 
       {/* Main content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#050505]">
-        <header className="h-16 border-b border-[#222] flex items-center justify-between px-10 flex-shrink-0">
+        <header className="h-16 border-b border-[#222] flex items-center justify-between px-6 md:px-10 flex-shrink-0">
           <div className="flex items-center gap-4">
+            <button className="md:hidden text-neutral-400 hover:text-white" onClick={() => setIsMobileMenuOpen(true)}>
+              <Menu className="w-6 h-6" />
+            </button>
             <h2 className="text-[11px] font-medium text-neutral-500 uppercase tracking-widest">
               {navItems.find(i => i.path === location.pathname)?.name || 'Panel'}
             </h2>
@@ -68,7 +90,7 @@ export default function AdminLayout() {
             <Link to="/" target="_blank" className="text-[11px] uppercase tracking-widest text-[#C5A059] hover:text-white transition-colors">Ver Tienda &rarr;</Link>
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto p-10">
+        <div className="flex-1 overflow-y-auto p-4 md:p-10">
           <div className="max-w-5xl mx-auto">
             <Outlet />
           </div>

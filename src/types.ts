@@ -2,6 +2,7 @@ export interface StoreSettings {
   title: string;
   logo: string | null; // base64
   visibleCategories: string[]; // array of category IDs
+  whatsappNumber?: string;
 }
 
 export interface Category {
