@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { getProducts, getCategories } from '../lib/db';
 import { Product, Category } from '../types';
-import { formatPrice, cn } from '../lib/utils';
+import { formatPrice, cn, getProductDisplayId } from '../lib/utils';
 import { Search, SlidersHorizontal, Info, X, ShoppingBag } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '../components/ui/Button';
@@ -41,8 +41,16 @@ export default function CatalogPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-20 text-neutral-500 font-serif">
-        Cargando colecciones...
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 animate-pulse">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="bg-[#0e0e0e] border border-[#222] rounded overflow-hidden">
+            <div className="aspect-[4/5] bg-[#141414]" />
+            <div className="p-4 space-y-2">
+              <div className="h-3 bg-[#1e1e1e] rounded w-3/4" />
+              <div className="h-3 bg-[#1a1a1a] rounded w-1/3" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -128,6 +136,11 @@ export default function CatalogPage() {
               </div>
               
               <div className="flex flex-col">
+                <div className="flex items-center justify-between gap-1 mb-0.5">
+                  <span className="text-[9px] font-mono text-[#C5A059] tracking-wider opacity-90">
+                    ID: {getProductDisplayId(product)}
+                  </span>
+                </div>
                 <h3 className="font-serif text-sm md:text-lg text-neutral-100 line-clamp-1">{product.title}</h3>
                 <span className={cn("font-medium text-xs md:text-sm mt-1", !product.inStock || product.stock === 0 ? "text-neutral-500 line-through" : "text-[#C5A059]")}>
                   {formatPrice(product.price)}
@@ -171,9 +184,14 @@ export default function CatalogPage() {
 
             {/* Product Details */}
             <div className="w-full md:w-1/2 p-6 md:p-12 overflow-y-auto bg-[#0F0F0F]">
-              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-[#C5A059]">
-                {categories.find(c => c.id === selectedProduct.categoryId)?.name}
-              </span>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-[#C5A059]">
+                  {categories.find(c => c.id === selectedProduct.categoryId)?.name}
+                </span>
+                <span className="text-[9px] md:text-[10px] font-mono tracking-wider px-2 py-0.5 rounded bg-[#161616] text-[#C5A059] border border-[#333]">
+                  ID: {getProductDisplayId(selectedProduct)}
+                </span>
+              </div>
               <h2 className="text-2xl md:text-4xl font-serif font-light text-[#F2F2F2] mt-1 md:mt-2 mb-2">{selectedProduct.title}</h2>
               <p className="text-xl md:text-2xl text-[#C5A059] mb-6 md:mb-8">{formatPrice(selectedProduct.price)}</p>
               

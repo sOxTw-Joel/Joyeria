@@ -1,16 +1,19 @@
 import { Outlet, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { getSettings, getCategories } from '../../lib/db';
+import { getSettings, getCategories, getCachedSettings } from '../../lib/db';
 import { StoreSettings, Category } from '../../types';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { ShoppingBag, Menu, X, Trash2, Lock, ShieldCheck } from 'lucide-react';
-import { formatPrice } from '../../lib/utils';
+import { ShoppingBag, Menu, X, Trash2, Lock, ShieldCheck, Gem } from 'lucide-react';
+import { formatPrice, getProductDisplayId } from '../../lib/utils';
 import { Button } from '../ui/Button';
+import LoadingScreen from '../ui/LoadingScreen';
+import { AnimatePresence } from 'motion/react';
 
 export default function CatalogLayout() {
-  const [settings, setSettings] = useState<StoreSettings | null>(null);
+  const [settings, setSettings] = useState<StoreSettings | null>(() => getCachedSettings());
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
@@ -18,8 +21,39 @@ export default function CatalogLayout() {
   const { user } = useAuth();
 
   useEffect(() => {
-    getSettings().then(setSettings);
-    getCategories().then(setCategories);
+    let isMounted = true;
+    const startTime = Date.now();
+
+    const handleSettingsUpdate = (e: CustomEvent<StoreSettings>) => {
+      if (e.detail) {
+        setSettings(e.detail);
+      }
+    };
+    window.addEventListener('store_settings_updated' as any, handleSettingsUpdate as any);
+
+    Promise.all([
+      getSettings(),
+      getCategories()
+    ]).then(([s, cats]) => {
+      if (!isMounted) return;
+      setSettings(s);
+      setCategories(cats);
+
+      // Smooth display duration to showcase the loading animation with the logo
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 850 - elapsed);
+      setTimeout(() => {
+        if (isMounted) setIsInitialLoading(false);
+      }, remaining);
+    }).catch(err => {
+      console.error('Error loading store data:', err);
+      if (isMounted) setIsInitialLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('store_settings_updated' as any, handleSettingsUpdate as any);
+    };
   }, []);
 
   const visibleCats = categories.filter(c => settings?.visibleCategories?.includes(c.id));
@@ -30,11 +64,12 @@ export default function CatalogLayout() {
       return;
     }
 
-    let message = "Hola, me gustaría hacer un pedido:\n\n";
+    let message = "Hola, quiero hacer un pedido:\n\n";
     cart.forEach(item => {
-      message += `- ${item.product.title} (x${item.quantity}) = ${formatPrice(item.product.price * item.quantity)}\n`;
+      const prodId = getProductDisplayId(item.product);
+      message += `- [${prodId}] ${item.product.title} (x${item.quantity}) = *${formatPrice(item.product.price * item.quantity)}*\n`;
     });
-    message += `\nTotal: ${formatPrice(cartTotal)}`;
+    message += `\n*Total:* ${formatPrice(cartTotal)}`;
 
     const url = `https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
@@ -42,6 +77,17 @@ export default function CatalogLayout() {
 
   return (
     <div className="min-h-screen bg-[#050505] font-sans text-white selection:bg-[#C5A059]/30 flex flex-col">
+      {/* Luxurious Loading Screen with animated Logo during Firebase fetch */}
+      <AnimatePresence>
+        {isInitialLoading && (
+          <LoadingScreen 
+            logo={settings?.logo} 
+            title={settings?.title || 'Catálogo de Joyería'} 
+            subtitle="Cargando colecciones exclusivas..." 
+          />
+        )}
+      </AnimatePresence>
+
       <header className="sticky top-0 z-40 bg-[#050505]/90 backdrop-blur-md border-b border-[#222]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative flex justify-between items-center h-20 md:h-24">
@@ -62,11 +108,20 @@ export default function CatalogLayout() {
               to="/" 
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:static md:translate-x-0 md:translate-y-0 flex items-center justify-center flex-shrink-0"
             >
-              <img 
-                src={settings?.logo || "/logo.webp"} 
-                alt={settings?.title || "Logo"} 
-                className="h-14 md:h-16 lg:h-[68px] w-auto max-w-[200px] sm:max-w-[260px] md:max-w-none object-contain transition-all" 
-              />
+              {settings?.logo ? (
+                <img 
+                  src={settings.logo} 
+                  alt={settings.title || "Logo"} 
+                  className="h-14 md:h-16 lg:h-[68px] w-auto max-w-[200px] sm:max-w-[260px] md:max-w-none object-contain transition-all" 
+                />
+              ) : (
+                <div className="flex items-center gap-2.5">
+                  <Gem className="w-5 h-5 text-[#C5A059]" />
+                  <span className="font-serif italic tracking-wider text-base sm:text-lg lg:text-xl text-white font-light">
+                    {settings?.title || 'Catálogo de Joyería'}
+                  </span>
+                </div>
+              )}
             </Link>
 
             {/* Desktop Navigation */}
@@ -208,10 +263,15 @@ export default function CatalogLayout() {
                     </div>
                     <div className="flex-1 flex flex-col justify-between py-1">
                       <div>
-                        <h4 className="text-sm font-serif text-white">{item.product.title}</h4>
-                        <p className="text-[#C5A059] text-sm mt-1">{formatPrice(item.product.price)}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-mono tracking-wider px-1.5 py-0.5 rounded bg-[#161616] text-[#C5A059] border border-[#333]">
+                            ID: {getProductDisplayId(item.product)}
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-serif text-white mt-1">{item.product.title}</h4>
+                        <p className="text-[#C5A059] text-sm mt-0.5">{formatPrice(item.product.price)}</p>
                       </div>
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center mt-2">
                         <div className="flex items-center gap-3 bg-[#050505] border border-[#222] rounded px-2 py-1">
                           <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="text-neutral-500 hover:text-white">-</button>
                           <span className="text-xs">{item.quantity}</span>

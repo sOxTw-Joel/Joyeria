@@ -12,6 +12,7 @@ export interface Category {
 
 export interface Product {
   id: string;
+  sku?: string; // Código/ID personalizado o automático del producto
   title: string;
   description: string;
   price: number;

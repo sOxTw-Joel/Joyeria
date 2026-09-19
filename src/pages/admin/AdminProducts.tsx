@@ -4,7 +4,7 @@ import { getProducts, addProduct, updateProduct, deleteProduct, getCategories } 
 import { Product, Category } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { Input, Textarea, Label } from '../../components/ui/Forms';
-import { compressImage } from '../../lib/utils';
+import { compressImage, getProductDisplayId } from '../../lib/utils';
 import { Plus, Edit2, Trash2, Archive, CheckCircle, Image as ImageIcon, X } from 'lucide-react';
 
 export default function AdminProducts() {
@@ -15,6 +15,7 @@ export default function AdminProducts() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Form State
+  const [sku, setSku] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState<string>('');
@@ -37,6 +38,7 @@ export default function AdminProducts() {
   };
 
   const resetForm = () => {
+    setSku('');
     setTitle('');
     setDescription('');
     setPrice('');
@@ -54,6 +56,7 @@ export default function AdminProducts() {
   };
 
   const handleOpenEdit = (p: Product) => {
+    setSku(p.sku || '');
     setTitle(p.title);
     setDescription(p.description);
     setPrice(p.price !== undefined && p.price !== null ? String(p.price) : '');
@@ -87,6 +90,7 @@ export default function AdminProducts() {
     const numPrice = price === '' ? 0 : parseFloat(price);
     const numStock = stock === '' ? 0 : parseInt(stock, 10);
     const productData = {
+      sku: sku.trim().toUpperCase() || undefined,
       title,
       description,
       price: isNaN(numPrice) ? 0 : numPrice,
@@ -156,7 +160,12 @@ export default function AdminProducts() {
                         </div>
                       )}
                       <div>
-                        <p className="font-serif text-white tracking-normal text-sm capitalize">{p.title}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-serif text-white tracking-normal text-sm capitalize">{p.title}</p>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1c1c1c] text-[#C5A059] border border-[#333]">
+                            [{getProductDisplayId(p)}]
+                          </span>
+                        </div>
                         <p className="text-[10px] text-neutral-500">{categories.find(c => c.id === p.categoryId)?.name || 'Sin categoría'}</p>
                       </div>
                     </td>
@@ -203,23 +212,33 @@ export default function AdminProducts() {
             </div>
             
             <form onSubmit={handleSave} className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2 md:col-span-2">
                   <Label>Título</Label>
-                  <Input required value={title} onChange={e => setTitle(e.target.value)} />
+                  <Input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Ej: Anillo Solitario Oro 18k" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Categoría</Label>
-                  <select 
-                    className="flex h-9 w-full rounded border border-[#333] bg-[#0a0a0a] px-3 py-1 text-sm shadow-sm transition-colors text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C5A059] focus-visible:border-[#C5A059]"
-                    required
-                    value={categoryId} 
-                    onChange={e => setCategoryId(e.target.value)}
-                  >
-                    <option value="" disabled>Seleccione...</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <Label>ID / Código Producto (SKU)</Label>
+                  <Input 
+                    value={sku} 
+                    onChange={e => setSku(e.target.value)} 
+                    placeholder="Ej: AN-001 (opcional)" 
+                    className="font-mono uppercase text-xs"
+                  />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Categoría</Label>
+                <select 
+                  className="flex h-9 w-full rounded border border-[#333] bg-[#0a0a0a] px-3 py-1 text-sm shadow-sm transition-colors text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C5A059] focus-visible:border-[#C5A059]"
+                  required
+                  value={categoryId} 
+                  onChange={e => setCategoryId(e.target.value)}
+                >
+                  <option value="" disabled>Seleccione...</option>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
               </div>
 
               <div className="space-y-2">

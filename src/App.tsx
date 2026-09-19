@@ -9,12 +9,21 @@ import AdminSettings from './pages/admin/AdminSettings';
 import AdminLogin from './pages/admin/AdminLogin';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import LoadingScreen from './components/ui/LoadingScreen';
+import { getCachedSettings } from './lib/db';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-white bg-[#050505] font-serif text-sm tracking-widest uppercase">Cargando...</div>;
+    const cached = getCachedSettings();
+    return (
+      <LoadingScreen 
+        logo={cached?.logo} 
+        title={cached?.title || 'Catálogo de Joyería'} 
+        subtitle="Verificando credenciales..." 
+      />
+    );
   }
 
   return (

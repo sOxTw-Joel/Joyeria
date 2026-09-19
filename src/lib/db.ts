@@ -14,18 +14,58 @@ import {
 import { StoreSettings, Category, Product } from '../types';
 
 // Settings
+const SETTINGS_CACHE_KEY = 'joyeria_store_settings';
+
+export const getCachedSettings = (): StoreSettings | null => {
+  try {
+    const raw = localStorage.getItem(SETTINGS_CACHE_KEY);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch {
+    // Ignore JSON parse errors
+  }
+  return null;
+};
+
 export const getSettings = async (): Promise<StoreSettings> => {
   const docRef = doc(db, 'settings', 'store');
   const docSnap = await getDoc(docRef);
   if (docSnap.exists()) {
-    return docSnap.data() as StoreSettings;
+    const data = docSnap.data() as StoreSettings;
+    try {
+      localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(data));
+    } catch {
+      // Ignore quota errors
+    }
+    return data;
   }
-  return { title: 'Catálogo de Joyería', logo: null, visibleCategories: [], whatsappNumber: '' };
+  const defaultSettings: StoreSettings = { 
+    title: 'Catálogo de Joyería', 
+    logo: null, 
+    visibleCategories: [], 
+    whatsappNumber: '' 
+  };
+  try {
+    localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(defaultSettings));
+  } catch {
+    // Ignore quota errors
+  }
+  return defaultSettings;
 };
 
 export const updateSettings = async (settings: Partial<StoreSettings>) => {
   const docRef = doc(db, 'settings', 'store');
+  // Ensure that if logo is null, it completely removes the old logo in Firestore
   await setDoc(docRef, settings, { merge: true });
+  try {
+    const cached = getCachedSettings() || { title: '', logo: null, visibleCategories: [] };
+    const merged = { ...cached, ...settings };
+    localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(merged));
+    window.dispatchEvent(new CustomEvent('store_settings_updated', { detail: merged }));
+  } catch {
+    // Ignore
+  }
 };
 
 // Categories

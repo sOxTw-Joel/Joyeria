@@ -1,17 +1,18 @@
-import React from "react";
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from "react";
 import { getSettings, updateSettings, getCategories } from '../../lib/db';
 import { StoreSettings, Category } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { Input, Label } from '../../components/ui/Forms';
 import { compressImage } from '../../lib/utils';
-import { Image as ImageIcon, X } from 'lucide-react';
+import { Image as ImageIcon, Trash2, Upload, Check } from 'lucide-react';
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState<StoreSettings>({ title: '', logo: null, visibleCategories: [] });
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savedSuccess, setSavedSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     Promise.all([getSettings(), getCategories()]).then(([s, cats]) => {
@@ -24,19 +25,40 @@ export default function AdminSettings() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await updateSettings(settings);
-    setSaving(false);
-    alert('Configuración guardada correctamente.');
+    setSavedSuccess(false);
+    try {
+      await updateSettings(settings);
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 4000);
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      alert('Error al guardar la configuración.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const base64 = await compressImage(file, 400); // smaller max width for logo
-      setSettings({ ...settings, logo: base64 });
+      const base64 = await compressImage(file, 500); // good resolution for logo
+      // Completely replace previous logo
+      setSettings(prev => ({ ...prev, logo: base64 }));
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (err) {
       console.error(err);
+      alert('Error al procesar la imagen del logo.');
+    }
+  };
+
+  const handleDeleteLogo = () => {
+    // Explicitly delete previous logo
+    setSettings(prev => ({ ...prev, logo: null }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -69,31 +91,51 @@ export default function AdminSettings() {
             />
           </div>
 
-          <div className="space-y-2 mt-6">
-            <Label>Logotipo</Label>
-            <div className="flex items-start gap-6 mt-2">
-              <div className="w-32 h-32 border border-[#333] rounded flex items-center justify-center bg-[#050505] overflow-hidden relative group">
+          <div className="space-y-3 mt-6">
+            <Label>Logotipo de la Marca</Label>
+            <p className="text-[11px] text-neutral-400">
+              Al subir una nueva imagen, se reemplazará y eliminará automáticamente el logo anterior.
+            </p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mt-2 p-4 bg-[#0a0a0a] rounded border border-[#222]">
+              <div className="w-40 h-28 border border-[#333] rounded flex items-center justify-center bg-[#050505] overflow-hidden relative group p-2 flex-shrink-0">
                 {settings.logo ? (
-                  <>
-                    <img src={settings.logo} alt="Logo" className="w-full h-full object-contain" />
-                    <button 
-                      type="button" 
-                      onClick={() => setSettings({ ...settings, logo: null })}
-                      className="absolute top-1 right-1 bg-[#161616] border border-[#333] rounded-full p-1 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:border-red-900"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </>
+                  <img src={settings.logo} alt="Logo" className="w-full h-full object-contain" />
                 ) : (
-                  <ImageIcon className="w-8 h-8 text-neutral-600" />
+                  <div className="flex flex-col items-center gap-1 text-neutral-600">
+                    <ImageIcon className="w-8 h-8" />
+                    <span className="text-[9px] uppercase tracking-wider">Sin logo</span>
+                  </div>
                 )}
               </div>
-              <div className="flex-1 space-y-2">
-                <label className="cursor-pointer inline-flex items-center justify-center rounded font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A059] border border-[#333] bg-transparent hover:border-[#C5A059] text-white hover:text-[#C5A059] h-9 px-4 py-2 text-[10px] uppercase tracking-widest">
-                  Subir Imagen
-                  <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-                </label>
-                <p className="text-[10px] uppercase tracking-widest text-neutral-500">Se recomienda un logo con fondo transparente (PNG).</p>
+              <div className="flex-1 space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="cursor-pointer inline-flex items-center gap-2 rounded font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C5A059] border border-[#333] bg-[#161616] hover:border-[#C5A059] text-white hover:text-[#C5A059] h-9 px-4 py-2 text-[10px] uppercase tracking-widest">
+                    <Upload className="w-3.5 h-3.5 text-[#C5A059]" />
+                    <span>{settings.logo ? 'Reemplazar Logo' : 'Subir Imagen de Logo'}</span>
+                    <input 
+                      ref={fileInputRef} 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={handleLogoUpload} 
+                    />
+                  </label>
+
+                  {settings.logo && (
+                    <button
+                      type="button"
+                      onClick={handleDeleteLogo}
+                      className="inline-flex items-center gap-1.5 rounded font-medium transition-colors border border-red-900/50 bg-red-950/20 hover:bg-red-950/40 text-red-400 hover:text-red-300 h-9 px-3 text-[10px] uppercase tracking-widest"
+                      title="Eliminar logo"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Eliminar Logo</span>
+                    </button>
+                  )}
+                </div>
+                <p className="text-[10px] uppercase tracking-wider text-neutral-500">
+                  Formato recomendado: PNG transparente o SVG de alta calidad.
+                </p>
               </div>
             </div>
           </div>
@@ -137,9 +179,17 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        <div className="pt-6 border-t border-[#222] flex justify-end mt-8">
+        <div className="pt-6 border-t border-[#222] flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+          <div>
+            {savedSuccess && (
+              <span className="inline-flex items-center gap-2 text-xs text-emerald-400 font-medium">
+                <Check className="w-4 h-4 text-emerald-400" />
+                Configuración y logo guardados correctamente en Firebase.
+              </span>
+            )}
+          </div>
           <Button type="submit" variant="primary" disabled={saving}>
-            {saving ? 'Guardando...' : 'GUARDAR CONFIGURACIÓN'}
+            {saving ? 'Guardando en Firebase...' : 'GUARDAR CONFIGURACIÓN'}
           </Button>
         </div>
 

@@ -12,6 +12,15 @@ export function formatPrice(price: number) {
   }).format(price);
 }
 
+// Formats display ID for WhatsApp and Catalog (uses sku if present, or short clean ID)
+export function getProductDisplayId(product: { id: string; sku?: string }): string {
+  if (product.sku && product.sku.trim().length > 0) {
+    return product.sku.trim().toUpperCase();
+  }
+  // If no sku, take the first 6-8 chars of Firestore doc id in uppercase
+  return (product.id ? product.id.slice(0, 6).toUpperCase() : 'PROD');
+}
+
 // Compresses image to avoid 1MB limit of Firestore
 export function compressImage(file: File, maxWidth = 1024): Promise<string> {
   return new Promise((resolve, reject) => {
