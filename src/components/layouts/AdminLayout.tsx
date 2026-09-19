@@ -1,16 +1,16 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Tags, Settings, LogOut, Menu, X } from 'lucide-react';
-import { auth } from '../../lib/firebase';
-import { signOut } from 'firebase/auth';
+import { LayoutDashboard, Package, Tags, Settings, LogOut, Menu, X, Store } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import { cn } from '../../lib/utils';
 import { useState } from 'react';
 
 export default function AdminLayout() {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { logout } = useAuth();
 
-  const handleLogout = () => {
-    signOut(auth);
+  const handleLogout = async () => {
+    await logout();
   };
 
   const navItems = [
@@ -64,7 +64,17 @@ export default function AdminLayout() {
             );
           })}
         </nav>
-        <div className="pt-4 border-t border-[#222] mt-auto">
+        
+        <div className="pt-4 border-t border-[#222] mt-auto space-y-2">
+          <Link
+            to="/"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 p-3 rounded-md text-[11px] uppercase tracking-widest font-medium text-[#C5A059] hover:bg-[#161616] transition-colors"
+          >
+            <Store className="w-4 h-4" />
+            Ver Catálogo
+          </Link>
+
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 p-3 w-full rounded-md text-[11px] uppercase tracking-widest font-medium text-red-500 hover:bg-red-950/30 transition-colors"
@@ -87,7 +97,13 @@ export default function AdminLayout() {
             </h2>
           </div>
           <div>
-            <Link to="/" target="_blank" className="text-[11px] uppercase tracking-widest text-[#C5A059] hover:text-white transition-colors">Ver Tienda &rarr;</Link>
+            <Link 
+              to="/" 
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-[#161616] border border-[#333] text-[11px] uppercase tracking-widest text-[#C5A059] hover:text-white hover:border-[#C5A059] transition-all"
+            >
+              <Store className="w-3.5 h-3.5" />
+              <span>Ver Catálogo</span>
+            </Link>
           </div>
         </header>
         <div className="flex-1 overflow-y-auto p-4 md:p-10">

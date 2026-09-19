@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react';
 import { getSettings, getCategories } from '../../lib/db';
 import { StoreSettings, Category } from '../../types';
 import { useCart } from '../../contexts/CartContext';
-import { ShoppingBag, Menu, X, Trash2 } from 'lucide-react';
-import { cn, formatPrice } from '../../lib/utils';
+import { useAuth } from '../../contexts/AuthContext';
+import { ShoppingBag, Menu, X, Trash2, Lock, ShieldCheck } from 'lucide-react';
+import { formatPrice } from '../../lib/utils';
 import { Button } from '../ui/Button';
 
 export default function CatalogLayout() {
@@ -14,6 +15,7 @@ export default function CatalogLayout() {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const { cart, removeFromCart, updateQuantity, cartTotal, cartCount } = useCart();
+  const { user } = useAuth();
 
   useEffect(() => {
     getSettings().then(setSettings);
@@ -42,29 +44,33 @@ export default function CatalogLayout() {
     <div className="min-h-screen bg-[#050505] font-sans text-white selection:bg-[#C5A059]/30 flex flex-col">
       <header className="sticky top-0 z-40 bg-[#050505]/90 backdrop-blur-md border-b border-[#222]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20 md:h-24 md:items-end md:pb-6">
+          <div className="relative flex justify-between items-center h-20 md:h-24">
             
             {/* Mobile Menu Button */}
-            <div className="flex md:hidden flex-1">
+            <div className="flex md:hidden z-10">
               <button 
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="p-2 -ml-2 text-neutral-400 hover:text-white"
+                className="p-2 -ml-2 text-neutral-400 hover:text-white transition-colors"
+                aria-label="Abrir menú"
               >
                 <Menu className="w-6 h-6" />
               </button>
             </div>
 
             {/* Logo */}
-            <Link to="/" className="flex items-center justify-center flex-1 md:flex-none">
+            <Link 
+              to="/" 
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:static md:translate-x-0 md:translate-y-0 flex items-center justify-center flex-shrink-0"
+            >
               <img 
                 src={settings?.logo || "/logo.webp"} 
                 alt={settings?.title || "Logo"} 
-                className="h-10 md:h-12 w-auto object-contain" 
+                className="h-14 md:h-16 lg:h-[68px] w-auto max-w-[200px] sm:max-w-[260px] md:max-w-none object-contain transition-all" 
               />
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-8 ml-10 flex-1">
+            <nav className="hidden md:flex items-center space-x-8 ml-8 lg:ml-12 flex-1">
               {visibleCats.map(cat => (
                 <a key={cat.id} href={`#cat-${cat.id}`} className="text-[11px] tracking-[0.2em] uppercase text-neutral-400 hover:text-white transition-colors">
                   {cat.name}
@@ -72,11 +78,33 @@ export default function CatalogLayout() {
               ))}
             </nav>
 
-            {/* Cart Button */}
-            <div className="flex flex-1 justify-end">
+            {/* Header Right Actions */}
+            <div className="flex z-10 items-center gap-3 sm:gap-4 justify-end md:flex-none">
+              {/* Admin Link on Header */}
+              {user ? (
+                <Link 
+                  to="/admin" 
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#161616] border border-[#C5A059]/40 text-[#C5A059] hover:bg-[#C5A059] hover:text-black transition-all text-[10px] uppercase tracking-widest font-medium"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Panel Admin</span>
+                </Link>
+              ) : (
+                <Link 
+                  to="/admin/login" 
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-neutral-400 hover:text-[#C5A059] transition-colors text-[10px] uppercase tracking-widest"
+                  title="Acceso Administrador"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Acceso Admin</span>
+                </Link>
+              )}
+
+              {/* Cart Button */}
               <button 
                 onClick={() => setIsCartOpen(true)}
                 className="relative p-2 -mr-2 text-neutral-400 hover:text-white transition-colors group"
+                aria-label="Ver carrito"
               >
                 <ShoppingBag className="w-6 h-6 group-hover:text-[#C5A059] transition-colors" />
                 {cartCount > 0 && (
@@ -96,24 +124,55 @@ export default function CatalogLayout() {
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div className="fixed inset-0 bg-black/80" onClick={() => setIsMobileMenuOpen(false)} />
           <div className="relative w-4/5 max-w-sm bg-[#0F0F0F] border-r border-[#222] flex flex-col p-6 h-full shadow-2xl z-10">
-            <div className="flex justify-between items-center mb-10">
-              <span className="text-[#C5A059] text-[10px] tracking-[0.2em] uppercase font-bold">Menú</span>
+            <div className="flex justify-between items-center mb-8">
+              <span className="text-[#C5A059] text-[10px] tracking-[0.2em] uppercase font-bold">Navegación</span>
               <button onClick={() => setIsMobileMenuOpen(false)} className="text-neutral-400 hover:text-white">
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <nav className="flex flex-col space-y-6">
+            
+            <nav className="flex flex-col space-y-5 flex-1 overflow-y-auto">
+              <Link 
+                to="/" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-sm tracking-[0.2em] uppercase text-white hover:text-[#C5A059] transition-colors"
+              >
+                Inicio
+              </Link>
               {visibleCats.map(cat => (
                 <a 
                   key={cat.id} 
                   href={`#cat-${cat.id}`} 
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-sm tracking-[0.2em] uppercase text-white hover:text-[#C5A059] transition-colors"
+                  className="text-sm tracking-[0.2em] uppercase text-neutral-300 hover:text-[#C5A059] transition-colors"
                 >
                   {cat.name}
                 </a>
               ))}
             </nav>
+
+            {/* Mobile Menu Admin Section */}
+            <div className="pt-6 border-t border-[#222] mt-auto">
+              {user ? (
+                <Link 
+                  to="/admin" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2.5 p-3 rounded bg-[#161616] border border-[#C5A059]/40 text-xs tracking-widest uppercase text-[#C5A059] hover:bg-[#C5A059] hover:text-black transition-all font-medium text-center"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Panel de Administración</span>
+                </Link>
+              ) : (
+                <Link 
+                  to="/admin/login" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 p-3 rounded bg-[#161616] border border-[#333] text-xs tracking-widest uppercase text-neutral-400 hover:text-[#C5A059] hover:border-[#C5A059] transition-colors text-center"
+                >
+                  <Lock className="w-4 h-4" />
+                  <span>Acceso Administrador</span>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -191,10 +250,22 @@ export default function CatalogLayout() {
         <Outlet />
       </main>
       
-      <footer className="border-t border-[#222] py-8 md:py-12 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-neutral-600 text-[10px] uppercase tracking-widest gap-4 text-center">
-          <span>&copy; {new Date().getFullYear()} {settings?.title || 'AURUM & CO.'}. Todos los derechos reservados.</span>
-          <span>Powered by Firebase DB</span>
+      <footer className="border-t border-[#222] py-8 md:py-10 mt-auto bg-[#080808]">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-neutral-500 text-[11px] uppercase tracking-widest gap-4 text-center">
+          <span>&copy; {new Date().getFullYear()} {settings?.title || 'AURUM & CO.'}. Todos los derechos reservados. Creado por Joel Arguello.</span>
+          <div>
+            {user ? (
+              <Link to="/admin" className="text-[#C5A059] hover:underline flex items-center justify-center gap-1.5 transition-colors">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Panel de Administración
+              </Link>
+            ) : (
+              <Link to="/admin/login" className="text-neutral-500 hover:text-[#C5A059] transition-colors flex items-center justify-center gap-1.5">
+                <Lock className="w-3.5 h-3.5" />
+                Acceso Admin
+              </Link>
+            )}
+          </div>
         </div>
       </footer>
     </div>

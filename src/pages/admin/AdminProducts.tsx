@@ -17,9 +17,9 @@ export default function AdminProducts() {
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [price, setPrice] = useState(0);
+  const [price, setPrice] = useState<string>('');
   const [categoryId, setCategoryId] = useState('');
-  const [stock, setStock] = useState(1);
+  const [stock, setStock] = useState<string>('1');
   const [inStock, setInStock] = useState(true);
   const [images, setImages] = useState<string[]>([]);
   const [archived, setArchived] = useState(false);
@@ -39,9 +39,9 @@ export default function AdminProducts() {
   const resetForm = () => {
     setTitle('');
     setDescription('');
-    setPrice(0);
+    setPrice('');
     setCategoryId(categories.length > 0 ? categories[0].id : '');
-    setStock(1);
+    setStock('1');
     setInStock(true);
     setImages([]);
     setArchived(false);
@@ -56,9 +56,9 @@ export default function AdminProducts() {
   const handleOpenEdit = (p: Product) => {
     setTitle(p.title);
     setDescription(p.description);
-    setPrice(p.price);
+    setPrice(p.price !== undefined && p.price !== null ? String(p.price) : '');
     setCategoryId(p.categoryId);
-    setStock(p.stock);
+    setStock(String(p.stock ?? 1));
     setInStock(p.inStock);
     setImages(p.images);
     setArchived(p.archived);
@@ -84,12 +84,14 @@ export default function AdminProducts() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const numPrice = price === '' ? 0 : parseFloat(price);
+    const numStock = stock === '' ? 0 : parseInt(stock, 10);
     const productData = {
       title,
       description,
-      price,
+      price: isNaN(numPrice) ? 0 : numPrice,
       categoryId,
-      stock,
+      stock: isNaN(numStock) ? 0 : numStock,
       inStock,
       images,
       archived,
@@ -228,11 +230,26 @@ export default function AdminProducts() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label>Precio ($)</Label>
-                  <Input type="number" required min="0" step="0.01" value={price} onChange={e => setPrice(Number(e.target.value))} />
+                  <Input 
+                    type="number" 
+                    required 
+                    min="0" 
+                    step="0.01" 
+                    placeholder="0" 
+                    value={price} 
+                    onChange={e => setPrice(e.target.value)} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Cantidad (Stock)</Label>
-                  <Input type="number" required min="0" value={stock} onChange={e => setStock(Number(e.target.value))} />
+                  <Input 
+                    type="number" 
+                    required 
+                    min="0" 
+                    placeholder="1" 
+                    value={stock} 
+                    onChange={e => setStock(e.target.value)} 
+                  />
                 </div>
                 <div className="space-y-2 flex flex-col justify-end">
                   <label className="flex items-center gap-2 h-9 cursor-pointer">
