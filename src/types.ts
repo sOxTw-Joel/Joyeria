@@ -16,6 +16,7 @@ export interface Product {
   title: string;
   description: string;
   price: number;
+  discountPercentage?: number; // Porcentaje de descuento (ej: 15 para 15% OFF)
   images: string[]; // base64
   categoryId: string;
   archived: boolean;

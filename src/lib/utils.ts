@@ -12,6 +12,15 @@ export function formatPrice(price: number) {
   }).format(price);
 }
 
+// Calculates discounted price if discountPercentage exists and is > 0
+export function getEffectivePrice(product: { price: number; discountPercentage?: number }): number {
+  if (product.discountPercentage && product.discountPercentage > 0) {
+    const discount = Math.min(100, Math.max(0, product.discountPercentage));
+    return Math.round(product.price * (1 - discount / 100));
+  }
+  return product.price;
+}
+
 // Formats display ID for WhatsApp and Catalog (uses sku if present, or short clean ID)
 export function getProductDisplayId(product: { id: string; sku?: string }): string {
   if (product.sku && product.sku.trim().length > 0) {

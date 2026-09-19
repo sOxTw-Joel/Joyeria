@@ -1,13 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useNavigate, Link } from 'react-router-dom';
 import { getSettings, updateSettings, getCategories } from '../../lib/db';
 import { StoreSettings, Category } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { Input, Label } from '../../components/ui/Forms';
 import { compressImage } from '../../lib/utils';
-import { Image as ImageIcon, Trash2, Upload, Check } from 'lucide-react';
+import { Image as ImageIcon, Trash2, Upload, Check, ArrowLeft, XCircle } from 'lucide-react';
 
 export default function AdminSettings() {
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<StoreSettings>({ title: '', logo: null, visibleCategories: [] });
+  const [initialSettings, setInitialSettings] = useState<StoreSettings | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -17,10 +20,16 @@ export default function AdminSettings() {
   useEffect(() => {
     Promise.all([getSettings(), getCategories()]).then(([s, cats]) => {
       setSettings(s);
+      setInitialSettings(s);
       setCategories(cats);
       setLoading(false);
     });
   }, []);
+
+  const handleCancel = () => {
+    // Return to the previous page or /admin/products (Gestión de Catálogo)
+    navigate('/admin/products');
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +84,28 @@ export default function AdminSettings() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <h1 className="text-2xl font-serif text-[#F2F2F2] mb-6 font-light italic">Configuración de la Tienda</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="inline-flex items-center gap-2 text-[11px] uppercase tracking-widest text-neutral-400 hover:text-[#C5A059] transition-colors mb-2"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Volver a Gestión de Catálogo</span>
+          </button>
+          <h1 className="text-2xl font-serif text-[#F2F2F2] font-light italic">Configuración de la Tienda</h1>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded border border-[#333] hover:border-neutral-500 text-neutral-400 hover:text-white text-[10px] uppercase tracking-widest transition-colors self-start sm:self-auto"
+        >
+          <XCircle className="w-3.5 h-3.5" />
+          <span>Salir sin Guardar</span>
+        </button>
+      </div>
 
       <form onSubmit={handleSave} className="bg-[#0F0F0F] rounded border border-[#222] p-8 space-y-8">
         
@@ -188,9 +218,19 @@ export default function AdminSettings() {
               </span>
             )}
           </div>
-          <Button type="submit" variant="primary" disabled={saving}>
-            {saving ? 'Guardando en Firebase...' : 'GUARDAR CONFIGURACIÓN'}
-          </Button>
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <Button 
+              type="button" 
+              variant="secondary" 
+              onClick={handleCancel}
+              disabled={saving}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" variant="primary" disabled={saving}>
+              {saving ? 'Guardando en Firebase...' : 'GUARDAR CONFIGURACIÓN'}
+            </Button>
+          </div>
         </div>
 
       </form>

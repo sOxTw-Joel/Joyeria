@@ -15,8 +15,7 @@ export default function AdminLayout() {
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-    { name: 'Productos', path: '/admin/products', icon: Package },
-    { name: 'Categorías', path: '/admin/categories', icon: Tags },
+    { name: 'Gestión de Catálogo', path: '/admin/products', icon: Package },
     { name: 'Configuración', path: '/admin/settings', icon: Settings },
   ];
 

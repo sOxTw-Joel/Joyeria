@@ -5,7 +5,7 @@ import { StoreSettings, Category } from '../../types';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { ShoppingBag, Menu, X, Trash2, Lock, ShieldCheck, Gem } from 'lucide-react';
-import { formatPrice, getProductDisplayId } from '../../lib/utils';
+import { formatPrice, getProductDisplayId, getEffectivePrice } from '../../lib/utils';
 import { Button } from '../ui/Button';
 import LoadingScreen from '../ui/LoadingScreen';
 import { AnimatePresence } from 'motion/react';
@@ -67,7 +67,11 @@ export default function CatalogLayout() {
     let message = "Hola, quiero hacer un pedido:\n\n";
     cart.forEach(item => {
       const prodId = getProductDisplayId(item.product);
-      message += `- [${prodId}] ${item.product.title} (x${item.quantity}) = *${formatPrice(item.product.price * item.quantity)}*\n`;
+      const effectivePrice = getEffectivePrice(item.product);
+      const discountNote = item.product.discountPercentage && item.product.discountPercentage > 0 
+        ? ` (${item.product.discountPercentage}% OFF)` 
+        : '';
+      message += `- [${prodId}] ${item.product.title}${discountNote} (x${item.quantity}) = *${formatPrice(effectivePrice * item.quantity)}*\n`;
     });
     message += `\n*Total:* ${formatPrice(cartTotal)}`;
 
@@ -269,7 +273,16 @@ export default function CatalogLayout() {
                           </span>
                         </div>
                         <h4 className="text-sm font-serif text-white mt-1">{item.product.title}</h4>
-                        <p className="text-[#C5A059] text-sm mt-0.5">{formatPrice(item.product.price)}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[#C5A059] text-sm font-medium">
+                            {formatPrice(getEffectivePrice(item.product))}
+                          </span>
+                          {item.product.discountPercentage && item.product.discountPercentage > 0 ? (
+                            <span className="text-neutral-500 text-xs line-through">
+                              {formatPrice(item.product.price)}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                       <div className="flex justify-between items-center mt-2">
                         <div className="flex items-center gap-3 bg-[#050505] border border-[#222] rounded px-2 py-1">

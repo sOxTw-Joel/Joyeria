@@ -54,7 +54,7 @@ export default function AdminDashboard() {
 
       <div className="mt-8 flex gap-4">
         <Link to="/admin/products" className="bg-[#C5A059] text-black px-4 py-2 rounded text-[11px] uppercase tracking-widest font-bold hover:bg-[#d4b373] transition-colors">
-          Gestionar Productos
+          Gestión de Catálogo
         </Link>
         <Link to="/admin/settings" className="bg-transparent border border-[#333] text-neutral-400 px-4 py-2 rounded text-[11px] uppercase tracking-widest font-bold hover:border-[#C5A059] hover:text-[#C5A059] transition-colors">
           Configuración
